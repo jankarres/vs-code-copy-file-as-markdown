@@ -1,0 +1,18 @@
+{
+  "cSpell.words": [
+    "devowl",
+    "Reamaze"
+  ],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": [
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.options": {
+    "configFile": "eslint.config.js"
+  },
+  "prettier.requireConfig": true
+}

@@ -1,0 +1,61 @@
+{
+    "name": "vs-code-copy-file-as-markdown",
+    "displayName": "Copy File as Markdown (with Filename)",
+    "icon": "assets/icon.png",
+    "version": "1.0.5",
+    "description": "Copy selected files as markdown with filename to the clipboard.",
+    "author": {
+        "name": "Jan Karres",
+        "email": "jan.karres@devowl.io",
+        "url": "https://jankarres.de"
+    },
+    "publisher": "jankarres",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jankarres/vs-code-copy-file-as-markdown.git"
+    },
+    "license": "MIT",
+    "engines": {
+        "node": ">=18",
+        "vscode": "^1.91.0"
+    },
+    "main": "./build/extension.js",
+    "scripts": {
+        "dev": "npm run build && code --extensionDevelopmentPath=$(pwd)",
+        "build": "tsc -p ./",
+        "build:production": "npm run build && vsce package",
+        "publish": "npm prune --production && vsce publish && npm i",
+        "lint": "eslint src --ext .ts",
+        "lint:fix": "eslint src --ext .ts --fix"
+    },
+    "devDependencies": {
+        "@types/node": "~18.15.3",
+        "@types/vscode": "~1.91.0",
+        "@typescript-eslint/eslint-plugin": "~7.16.1",
+        "@typescript-eslint/parser": "~7.16.1",
+        "eslint": "~8.56.0",
+        "eslint-config-prettier": "~9.1.0",
+        "eslint-plugin-prettier": "~5.1.3",
+        "prettier": "~3.3.2",
+        "typescript": "~5.5.3"
+    },
+    "activationEvents": [
+        "onCommand:extension.copyAsMarkdown"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.copyAsMarkdown",
+                "title": "Copy as markdown with filename"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "extension.copyAsMarkdown",
+                    "group": "5_cutcopypaste"
+                }
+            ]
+        }
+    }
+}

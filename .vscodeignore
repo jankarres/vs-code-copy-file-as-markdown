@@ -1,0 +1,10 @@
+.vscode/**
+src/**
+assets/**
+!assets/icon.png
+**/.gitignore
+**/.git/
+eslint.config.js
+package-lock.json
+prettier-config.json
+tsconfig.json
