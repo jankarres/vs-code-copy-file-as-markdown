@@ -2,7 +2,7 @@
     "name": "vs-code-copy-file-as-markdown",
     "displayName": "Copy File as Markdown (with Filename)",
     "icon": "assets/icon.png",
-    "version": "1.0.5",
+    "version": "1.1.2",
     "description": "Copy selected files as markdown with filename to the clipboard.",
     "author": {
         "name": "Jan Karres",
@@ -24,7 +24,7 @@
         "dev": "npm run build && code --extensionDevelopmentPath=$(pwd)",
         "build": "tsc -p ./",
         "build:production": "npm run build && vsce package",
-        "publish": "npm prune --production && vsce publish && npm i",
+        "publish": "npm run build:production && npm prune --production && vsce publish && npm i",
         "lint": "eslint src --ext .ts",
         "lint:fix": "eslint src --ext .ts --fix"
     },
@@ -40,22 +40,40 @@
         "typescript": "~5.5.3"
     },
     "activationEvents": [
-        "onCommand:extension.copyAsMarkdown"
+        "onCommand:extension.copyExplorerSelectedFilesAsMarkdown"
     ],
     "contributes": {
         "commands": [
             {
-                "command": "extension.copyAsMarkdown",
-                "title": "Copy as markdown with filename"
+                "command": "extension.copyExplorerSelectedFilesAsMarkdown",
+                "title": "Copy files as markdown with filename"
+            },
+            {
+                "command": "extension.copyActiveFileAsMarkdown",
+                "title": "Copy active file as markdown with filename"
             }
         ],
         "menus": {
             "explorer/context": [
                 {
-                    "command": "extension.copyAsMarkdown",
+                    "command": "extension.copyExplorerSelectedFilesAsMarkdown",
                     "group": "5_cutcopypaste"
                 }
+            ],
+            "editor/context": [
+                {
+                    "command": "extension.copyActiveFileAsMarkdown",
+                    "group": "navigation"
+                }
             ]
-        }
+        },
+        "keybindings": [
+            {
+                "command": "extension.copyActiveFileAsMarkdown",
+                "key": "alt+cmd+c",
+                "mac": "alt+cmd+c",
+                "when": "editorTextFocus"
+            }
+        ]
     }
 }

@@ -1,84 +1,111 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 
-async function getFilesFromFolder(folderUri: vscode.Uri): Promise<vscode.Uri[]> {
-    let files: vscode.Uri[] = [];
+export function activate(context: vscode.ExtensionContext) {
+    context.subscriptions.push(
+        vscode.commands.registerCommand('extension.copyActiveFileAsMarkdown', copyActiveFileAsMarkdown),
+        vscode.commands.registerCommand('extension.copyExplorerSelectedFilesAsMarkdown', copyExplorerSelectedFilesAsMarkdown)
+    );
+}
 
-    async function readDir(dirUri: vscode.Uri) {
-        const dirContents = await vscode.workspace.fs.readDirectory(dirUri);
+async function copyActiveFileAsMarkdown() {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        vscode.window.showErrorMessage('No active editor found.');
+        return;
+    }
 
-        for (const [name, type] of dirContents) {
-            const uri = vscode.Uri.joinPath(dirUri, name);
-            if (type === vscode.FileType.Directory) {
-                await readDir(uri); // Recursively read subdirectories
-            } else if (type === vscode.FileType.File) {
-                files.push(uri);
-            }
+    const document = editor.document;
+    const relativePath = vscode.workspace.asRelativePath(document.uri);
+    const content = document.getText();
+
+    const markdownText = createMarkdownForFile(relativePath, content);
+    await copyToClipboard(markdownText, 'Active file exported to clipboard as markdown.');
+}
+
+async function copyExplorerSelectedFilesAsMarkdown(lastSelectedFile: vscode.Uri, files: vscode.Uri[]) {
+    if (!files || files.length === 0) {
+        vscode.window.showErrorMessage('No files or folders selected.');
+        return;
+    }
+
+    const allFiles = await getAllFiles(files);
+
+    if (allFiles.length === 0) {
+        vscode.window.showErrorMessage('No files found in the selected folders.');
+        return;
+    }
+
+    const markdownText = await createMarkdownForFiles(allFiles);
+    await copyToClipboard(markdownText, 'Files exported to clipboard as markdown.');
+}
+
+async function getAllFiles(items: vscode.Uri[]): Promise<vscode.Uri[]> {
+    const allFiles: vscode.Uri[] = [];
+
+    for (const item of items) {
+        if ((await vscode.workspace.fs.stat(item)).type === vscode.FileType.Directory) {
+            allFiles.push(...await getFilesFromFolder(item));
+        } else {
+            allFiles.push(item);
         }
     }
 
-    await readDir(folderUri);
+    return allFiles;
+}
+
+async function getFilesFromFolder(folder: vscode.Uri): Promise<vscode.Uri[]> {
+    const files: vscode.Uri[] = [];
+    const entries = await vscode.workspace.fs.readDirectory(folder);
+
+    for (const [name, type] of entries) {
+        const fullPath = vscode.Uri.joinPath(folder, name);
+        if (type === vscode.FileType.Directory) {
+            files.push(...await getFilesFromFolder(fullPath));
+        } else {
+            files.push(fullPath);
+        }
+    }
+
     return files;
 }
 
-export function activate(context: vscode.ExtensionContext) {
-    const disposable = vscode.commands.registerCommand('extension.copyAsMarkdown', async (lastSelectedFile: vscode.Uri, files: vscode.Uri[]) => {
-        console.log("lastSelectedFile", lastSelectedFile);
-        console.log("files", files);
-        if (!files || files.length === 0) {
-            vscode.window.showInformationMessage('No files or folders selected.');
-            return;
-        }
+function createMarkdownForFile(relativePath: string, content: string): string {
+    const escapedContent = escapeContent(content);
+    return `File: \`${relativePath}\`\n\`\`\`\n${escapedContent}\n\`\`\`\n\n`;
+}
 
-        let allFiles: vscode.Uri[] = [];
+async function createMarkdownForFiles(files: vscode.Uri[]): Promise<string> {
+    let markdownText = '';
 
-        // Process each item in the selection
-        for (const file of files) {
-            if ((await vscode.workspace.fs.stat(file)).type === vscode.FileType.Directory) {
-                // If it's a folder, get all files inside it recursively
-                allFiles.push(...await getFilesFromFolder(file));
-            } else {
-                // Otherwise, just add the file
-                allFiles.push(file);
-            }
-        }
-
-        if (allFiles.length === 0) {
-            vscode.window.showInformationMessage('No files found in the selected folders.');
-            return;
-        }
-
-        let markdownText = '';
-
-        // Process each file
-        for (const file of allFiles) {
-            const relativePath = path.relative(vscode.workspace.rootPath || '', file.fsPath);
-            const fileName = path.basename(file.fsPath); // Extract filename
-
-            try {
-                const content = (await vscode.workspace.fs.readFile(file)).toString();
-                const escapedContent = content
-                    .replace(/\\`/g, '\\\\`') // Escape backticks
-                    .replace(/[\r\n]+$/, ''); // Remove trailing empty lines
-
-                    markdownText += `File: \`${relativePath}\`\n\`\`\`\n${escapedContent}\n\`\`\`\n\n`;
-            } catch (error) {
-                vscode.window.showErrorMessage(`Failed to read file '${fileName}'.`);
-                console.error('File read error:', error);
-                return;
-            }
-        }
-
+    for (const file of files) {
+        const relativePath = vscode.workspace.asRelativePath(file);
         try {
-            await vscode.env.clipboard.writeText(markdownText);
-            vscode.window.showInformationMessage(`Files exported to clipboard as markdown.`);
+            const content = (await vscode.workspace.fs.readFile(file)).toString();
+            markdownText += createMarkdownForFile(relativePath, content);
         } catch (error) {
-            vscode.window.showErrorMessage('Failed to write to clipboard.');
-            console.error('Clipboard error:', error);
+            vscode.window.showErrorMessage(`Failed to read file '${path.basename(file.fsPath)}'.`);
+            console.error('File read error:', error);
         }
-    });
+    }
 
-    context.subscriptions.push(disposable);
+    return markdownText;
+}
+
+function escapeContent(content: string): string {
+    return content
+        .replace(/\`/g, '\\`') // Escape backticks
+        .replace(/[\r\n]+$/, ''); // Remove trailing empty lines
+}
+
+async function copyToClipboard(text: string, successMessage: string) {
+    try {
+        await vscode.env.clipboard.writeText(text);
+        vscode.window.setStatusBarMessage(successMessage, 5000);
+    } catch (error) {
+        vscode.window.showErrorMessage('Failed to write to clipboard.');
+        console.error('Clipboard error:', error);
+    }
 }
 
 export function deactivate() {}

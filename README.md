@@ -2,7 +2,7 @@
 
 A Visual Studio Code extension that allows you to copy selected files in the Explorer as markdown with filename to the clipboard.
 
-The extension is particularly useful for quickly and easily exporting multiple files with paths for LLMs like ChatGPT or Claude.
+The extension is particularly useful for quickly and easily exporting multiple files with paths for LLMs like ChatGPT or Claude (if you do not use an AI coding integration/editor like [Cursor](https://www.cursor.com/) or [GitHub Copilot](https://github.com/features/copilot)).
 
 ## Features
 
@@ -16,15 +16,24 @@ The extension is particularly useful for quickly and easily exporting multiple f
     - Click \`Install\` to add the extension to your VS Code environment.
 
 2. **Use the Extension**:
+
+    **Copy open file content as markdown:**
+
+    - To copy the content of the currently open file in the editor along with its filename in markdown format, use the keyboard shortcut `alt+cmd+c`.
+
+    **Copy selected file(s) as Markdown:**
+
     - Open the Explorer view in VS Code.
     - Right-click on a file, multiple selected files, or a folder.
-    - Select \`Copy as markdown with filename\` from the context menu.
+    - Select `Copy as markdown with filename` from the context menu to copy the file paths as markdown.
 
-<img src="./assets/screenshot-context-menu.png" alt="Context Menu Screenshot" width="300"/>
+    <img src="./assets/screenshot-context-menu.png" alt="Context menu screenshot" width="300" />
 
 ## Configuration
 
-There are no additional configuration settings for this extension.
+- Change the keyboard shortcut for Copy open file content as markdown" 
+<img src="./assets/screenshot-keybindings-change.png" alt="Change key bindings screenshot" width="600" />
+
 
 ## License
 
