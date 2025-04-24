@@ -94,7 +94,6 @@ async function createMarkdownForFiles(files: vscode.Uri[]): Promise<string> {
 
 function escapeContent(content: string): string {
     return content
-        .replace(/\`/g, '\\`') // Escape backticks
         .replace(/[\r\n]+$/, ''); // Remove trailing empty lines
 }
 
